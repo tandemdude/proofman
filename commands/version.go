@@ -2,35 +2,25 @@ package commands
 
 import (
 	"fmt"
+	"github.com/tandemdude/proofman/internal/isabelle"
 	"github.com/urfave/cli/v2"
-	"os/exec"
 )
 
 const releaseVersion = "0.0.1"
 const releaseDate = "development"
 
 func version(_ *cli.Context) error {
-	fmt.Printf("Proofman version \"%s\" %s\n", releaseVersion, releaseDate)
+	fmt.Printf("Proofman version '%s' %s\n", releaseVersion, releaseDate)
 
-	cmd := exec.Command("isabelle", "version")
-	err := cmd.Run()
+	isabelleVersion, err := isabelle.Version()
 
-	isabelleFound := true
-	if err != nil {
-		isabelleFound = false
-	}
-
-	isabelleVersion := ""
-	if isabelleFound {
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			isabelleFound = false
-		}
-		isabelleVersion = string(out)
+	isabelleFound := false
+	if err == nil {
+		isabelleFound = true
 	}
 
 	if isabelleFound {
-		fmt.Printf("Isabelle \"%s\" executable found\n", isabelleVersion)
+		fmt.Printf("Isabelle '%s' executable found\n", isabelleVersion)
 	} else {
 		fmt.Println("Isabelle executable not found - some commands may not work correctly!")
 	}

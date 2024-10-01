@@ -3,33 +3,25 @@ package commands
 import (
 	"fmt"
 	"github.com/tandemdude/proofman/internal"
+	"github.com/tandemdude/proofman/internal/files"
+	"github.com/tandemdude/proofman/internal/isabelle"
 	"github.com/urfave/cli/v2"
-	"os/exec"
 )
 
-const generatedHgIgnore = `syntax: glob
-
-venv/**
-`
-const generatedGitIgnore = `venv/
-`
-
-func init_(cCtx *cli.Context) error {
+func init_(_ *cli.Context) error {
 	fmt.Println("running 'isabelle mkroot' to initialise the project")
-	cmd := exec.Command("isabelle", "mkroot")
-	err := cmd.Run()
-
+	_, err := isabelle.MkRoot()
 	if err != nil {
-		return fmt.Errorf("failed to create a ROOT file in the current directory - %s", err)
+		return fmt.Errorf("failed to create ROOT configuration in the current directory - %s", err)
 	}
 
 	// Create version control ignore files
 	fmt.Println("creating version control ignore files")
-	err = internal.WriteFile(".hgignore", generatedHgIgnore)
+	err = internal.WriteFile(".hgignore", files.HgIgnore)
 	if err != nil {
 		return fmt.Errorf("failed to create a '.hgignore' file in the current directory - %s", err)
 	}
-	err = internal.WriteFile(".gitignore", generatedGitIgnore)
+	err = internal.WriteFile(".gitignore", files.GitIgnore)
 	if err != nil {
 		return fmt.Errorf("failed to create a '.gitignore' file in the current directory - %s", err)
 	}
