@@ -2,10 +2,9 @@ package main
 
 import (
 	"github.com/tandemdude/proofman/commands"
+	"github.com/urfave/cli/v2"
 	"log"
 	"os"
-
-	"github.com/urfave/cli/v2"
 )
 
 func main() {
@@ -14,13 +13,14 @@ func main() {
 		Usage: "Dependency manager and utility tool for Isabelle",
 		Commands: []*cli.Command{
 			commands.InitCommand,
-			commands.VenvCommand,
 			commands.VersionCommand,
 			// install <package> <version> [use lockfile?]
 			// uninstall <package>
 			// lock?
 			// package
 			// tree
+			// go mod tidy equivalent?
+			// upload
 		},
 	}
 
