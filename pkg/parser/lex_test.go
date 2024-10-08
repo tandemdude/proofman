@@ -67,6 +67,21 @@ func TestParseStringLiteral(t *testing.T) {
 	}
 }
 
+var (
+	rawLatexTestString = `\<open>
+foo bar baz
+\<close>`
+	latexTestString = rawLatexTestString + "      "
+)
+
+func TestParseLatexStringLiteral(t *testing.T) {
+	assert := asrt.New(t)
+
+	str, err := parseLatexStringLiteral(&latexTestString, 0)
+	assert.NoError(err, "Unexpected error for input: %s", latexTestString)
+	assert.Equal(rawLatexTestString, str, "Expected: %s, got: %s", rawLatexTestString, str)
+}
+
 func TestParseNumberLiteral(t *testing.T) {
 	assert := asrt.New(t)
 

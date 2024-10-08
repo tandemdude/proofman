@@ -1,8 +1,8 @@
 package parser
 
 import (
-	"github.com/tandemdude/proofman/components/parser/structure"
-	tks "github.com/tandemdude/proofman/components/parser/tokens"
+	"github.com/tandemdude/proofman/pkg/parser/structure"
+	tks "github.com/tandemdude/proofman/pkg/parser/tokens"
 )
 
 const (
@@ -31,6 +31,8 @@ func NewTheoryParser(tokens []*tks.Token) *TheoryParser {
 }
 
 func (p *TheoryParser) Parse() (*structure.TheoryStructure, error) {
+	// TODO - there are some theories in the isabelle source this won't parse
+	//        maybe fix in the future
 	parsedStructure := &structure.TheoryStructure{
 		Name:    "",
 		Imports: make([]string, 0),

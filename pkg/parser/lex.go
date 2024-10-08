@@ -3,7 +3,7 @@ package parser
 import (
 	"errors"
 	"fmt"
-	tk "github.com/tandemdude/proofman/components/parser/tokens"
+	tk "github.com/tandemdude/proofman/pkg/parser/tokens"
 	"strconv"
 	"strings"
 	"unicode"
@@ -30,14 +30,34 @@ func NewLexer(source string) *Lexer {
 }
 
 func parseIdentifier(s *string, idx int) (string, error) {
-	start := idx
+	start, dotFound := idx, false
 	for idx < len(*s) {
 		r := rune((*s)[idx])
+		// An identifier *may* contain a single dot, but it may not be the first or last element
+		if idx == start && r == '.' {
+			return "", errors.New("identifiers may not start with '.'")
+		}
+
+		if r == '.' {
+			if dotFound {
+				return "", errors.New("identifiers may only contain a single '.'")
+			}
+			dotFound = true
+
+			idx++
+			continue
+		}
+
 		// Valid characters are letters, digits, or underscores
 		if !(unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_') {
 			break
 		}
+
 		idx++
+	}
+
+	if (*s)[idx-1] == '.' {
+		return "", errors.New("identifiers may not end with '.'")
 	}
 
 	return (*s)[start:idx], nil
@@ -67,6 +87,22 @@ func parseStringLiteral(s *string, idx int) (string, error) {
 	}
 
 	return "", errors.New("unterminated string literal")
+}
+
+func parseLatexStringLiteral(s *string, idx int) (string, error) {
+	start := idx
+
+	for idx < len(*s) {
+		r := (*s)[idx]
+
+		if r == '\\' && (*s)[idx:idx+8] == `\<close>` {
+			return (*s)[start : idx+8], nil
+		}
+
+		idx++
+	}
+
+	return "", errors.New("unterminated latex string literal")
 }
 
 func parseNumberLiteral(s *string, idx int) (string, error) {
@@ -166,6 +202,16 @@ func (l *Lexer) Split() ([]*tk.Token, error) {
 
 			tokens = append(tokens, &tk.Token{tk.StringLiteral, str, lineNo})
 			currentIndex += len(str) + 2
+
+			lineNo += strings.Count(str, "\n")
+		case currentRune == '\\':
+			str, err := parseLatexStringLiteral(&l.source, currentIndex)
+			if err != nil {
+				return tokens, err
+			}
+
+			tokens = append(tokens, &tk.Token{tk.StringLiteral, str, lineNo})
+			currentIndex += len(str)
 
 			lineNo += strings.Count(str, "\n")
 		case unicode.IsDigit(currentRune):

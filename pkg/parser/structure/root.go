@@ -1,6 +1,6 @@
 package structure
 
-import "github.com/tandemdude/proofman/components/parser/tokens"
+import "github.com/tandemdude/proofman/pkg/parser/tokens"
 
 type Theories struct {
 	Options  map[string]*tokens.Token

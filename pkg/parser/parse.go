@@ -2,7 +2,7 @@ package parser
 
 import (
 	"fmt"
-	tks "github.com/tandemdude/proofman/components/parser/tokens"
+	tks "github.com/tandemdude/proofman/pkg/parser/tokens"
 	"slices"
 	"strings"
 )

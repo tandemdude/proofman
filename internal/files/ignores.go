@@ -2,8 +2,8 @@ package files
 
 const HgIgnore = `syntax: glob
 
-venv/**
+.venv/**
 `
 
-const GitIgnore = `venv/
+const GitIgnore = `.venv/
 `

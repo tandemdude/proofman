@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"github.com/tandemdude/proofman/components/parser/structure"
+	"github.com/tandemdude/proofman/pkg/parser/structure"
 	"io"
 	"regexp"
 )

@@ -1,23 +1,19 @@
 package config
 
 import (
-	"errors"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/tandemdude/proofman/internal"
 	"os"
 	"path"
+	"time"
 )
 
-func FileExists(directory string) (bool, error) {
+func FileExistsIn(directory string) (bool, error) {
 	return internal.PathExists(path.Join(directory, internal.ConfigFileName))
 }
 
 func FromFile(directory string) (*ProofmanConfig, error) {
 	cfgFilePath := path.Join(directory, internal.ConfigFileName)
-
-	if exists, err := FileExists(cfgFilePath); err != nil || !exists {
-		return nil, errors.New("config file not found")
-	}
 
 	contents, err := os.ReadFile(cfgFilePath)
 	if err != nil {
@@ -31,5 +27,25 @@ func FromFile(directory string) (*ProofmanConfig, error) {
 		return nil, err
 	}
 
+	if err = Validate(cfg); err != nil {
+		return nil, err
+	}
+
 	return cfg, nil
+}
+
+func Default() *ProofmanConfig {
+	return &ProofmanConfig{
+		Project: Project{
+			Name:        "NewProject",
+			Description: "New Isabelle project using Proofman",
+			Version:     time.Now().Format(time.DateOnly),
+			Requires:    []string{},
+		},
+		Package: Package{
+			Exclude: []string{
+				".venv/**", "**/*.ipkg",
+			},
+		},
+	}
 }

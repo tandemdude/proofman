@@ -23,7 +23,13 @@ go.work.sum
 
 # Tool executable
 proofman.exe
-proofman
+cmd/proofman/proofman
 
 # IDEA
 .idea/
+
+# Test directory
+_test/
+
+# Stupid OSX Files
+.DS_Store
