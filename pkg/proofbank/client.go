@@ -14,9 +14,10 @@ import (
 type Client struct {
 	indexUrl   *url.URL
 	httpClient *http.Client
+	apiToken   string
 }
 
-func NewClient(indexUrl string) (*Client, error) {
+func NewAuthenticatedClient(indexUrl, token string) (*Client, error) {
 	parsedUrl, err := url.Parse(indexUrl)
 	if err != nil {
 		return nil, err
@@ -25,7 +26,12 @@ func NewClient(indexUrl string) (*Client, error) {
 	return &Client{
 		indexUrl:   parsedUrl,
 		httpClient: &http.Client{},
+		apiToken:   token,
 	}, nil
+}
+
+func NewUnauthenticatedClient(indexUrl string) (*Client, error) {
+	return NewAuthenticatedClient(indexUrl, "")
 }
 
 func (c *Client) GetPackageInfo(packageName string) (*genproto.PackageInfoResponse, error) {
@@ -103,4 +109,29 @@ func (c *Client) QueryPackagesForSessions(sessions []string) (*genproto.PackageQ
 	err = protojson.Unmarshal(body, unmarshalled)
 
 	return unmarshalled, err
+}
+
+func (c *Client) UploadPackage(archive io.Reader) error {
+	req, err := http.NewRequest(
+		"POST",
+		c.indexUrl.JoinPath("api", "packages").String(),
+		archive,
+	)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/octet-stream")
+	req.Header.Set("Authorization", "Bearer "+c.apiToken)
+
+	response, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	// TODO - StatusCreated? - waiting on proofbank impl
+	if response.StatusCode != http.StatusOK {
+		return errors.New("unexpected status code: " + strconv.Itoa(response.StatusCode))
+	}
+	return nil
 }

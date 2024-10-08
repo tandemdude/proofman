@@ -3,20 +3,17 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"github.com/manifoldco/promptui"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/tandemdude/proofman/internal"
 	"github.com/tandemdude/proofman/internal/files"
 	"github.com/tandemdude/proofman/internal/logging"
 	"github.com/tandemdude/proofman/pkg/config"
-	"github.com/tandemdude/proofman/pkg/input"
 	"github.com/tandemdude/proofman/pkg/isabelle"
 	"github.com/urfave/cli/v2"
 	"os"
 	"path/filepath"
-	"regexp"
 )
-
-var gitOrMercurialPattern = regexp.MustCompile(`^[gm]$`)
 
 func createVenv(pwd, path string) error {
 	// Check if a virtual environment is already active
@@ -119,14 +116,31 @@ func init_(_ *cli.Context) error {
 		return err
 	}
 
+	// TODO - look into cleaning the directory string (in case of spaces etc)
 	dirName := filepath.Base(pwd)
 
 	// Take input for config values
-	projectName, err := input.ShortOrEmpty(fmt.Sprintf("Enter your project name (valid chars [a-zA-Z0-9_-]) (%s): ", dirName), config.NamePattern)
+	namePrompt := promptui.Prompt{
+		Label:   "Project Name [a-zA-Z0-9_-]",
+		Default: dirName,
+		Validate: func(s string) error {
+			matches := config.NamePattern.MatchString(s)
+			if !matches {
+				return errors.New("invalid project name")
+			}
+			return nil
+		},
+	}
+	projectName, err := namePrompt.Run()
 	if err != nil {
 		return err
 	}
-	gitOrMercurial, err := input.ShortOrEmpty("Are you going to use Git [g] or Mercurial [m] as your VCS (leave blank for no VCS): ", gitOrMercurialPattern)
+
+	gitOrMercurialPrompt := promptui.Select{
+		Label: "Version Control System",
+		Items: []string{"Git", "Mercurial", "N/A"},
+	}
+	_, gitOrMercurial, err := gitOrMercurialPrompt.Run()
 	if err != nil {
 		return err
 	}
@@ -138,13 +152,13 @@ func init_(_ *cli.Context) error {
 	}
 
 	// Create version control ignore files
-	if gitOrMercurial != nil {
-		if *gitOrMercurial == "m" {
+	if gitOrMercurial != "N/A" {
+		if gitOrMercurial == "Mercurial" {
 			err = internal.WriteFile(".hgignore", files.HgIgnore, false)
 			if err != nil {
 				return fmt.Errorf("failed to create a '.hgignore' file in the current directory - %s", err)
 			}
-		} else if *gitOrMercurial == "g" {
+		} else if gitOrMercurial == "Git" {
 			err = internal.WriteFile(".gitignore", files.GitIgnore, false)
 			if err != nil {
 				return fmt.Errorf("failed to create a '.gitignore' file in the current directory - %s", err)
@@ -155,12 +169,7 @@ func init_(_ *cli.Context) error {
 	// Create proofman config file
 	logging.Verbose("creating Proofman config file")
 	defaultConfig := config.Default()
-
-	if projectName == nil || len(*projectName) == 0 {
-		defaultConfig.Project.Name = dirName
-	} else {
-		defaultConfig.Project.Name = *projectName
-	}
+	defaultConfig.Project.Name = projectName
 
 	dumped, err := toml.Marshal(config.Default())
 	if err != nil {

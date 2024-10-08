@@ -137,7 +137,7 @@ func manifestFromScratch(pwd string) (*resolvedManifest, error) {
 
 	// We need to resolve the versions and actual package names for the sessions that are required
 	// by making a request to the package index
-	client, err := proofbank.NewClient(internal.ProofbankBaseUrl)
+	client, err := proofbank.NewUnauthenticatedClient(internal.ProofbankBaseUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -295,16 +295,22 @@ func package_(_ *cli.Context) error {
 			info.Name() != "README.md" &&
 			info.Name() != internal.ConfigFileName &&
 			!matchesDefaultInclude {
+			matchesAnyInclude := false
 			for _, include := range manifestInfo.includes {
 				matches, err := doublestar.PathMatch(include, path)
 				if err != nil {
 					return err
 				}
 
-				if !matches {
-					return nil
+				if matches {
+					matchesAnyInclude = true
+					logging.Verbose("item '%s' explicitly included - matches expression '%s'", path, include)
+					break
 				}
-				logging.Verbose("item '%s' explicitly included - matches expression '%s'", path, include)
+			}
+
+			if !matchesAnyInclude {
+				return nil
 			}
 		}
 
@@ -356,6 +362,6 @@ func package_(_ *cli.Context) error {
 
 var PackageCommand = &cli.Command{
 	Name:   "package",
-	Usage:  "Packages the current project to be suitable for upload to the Proofman Package Index",
+	Usage:  "Packages the current project to be suitable for upload to ProofBank",
 	Action: package_,
 }
