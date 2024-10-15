@@ -7,12 +7,6 @@ type Project struct {
 	Requires    []string `toml:"requires"`
 }
 
-type Package struct {
-	Include []string `toml:"include"`
-	Exclude []string `toml:"exclude"`
-}
-
 type ProofmanConfig struct {
 	Project Project `toml:"project"`
-	Package Package `toml:"package"`
 }

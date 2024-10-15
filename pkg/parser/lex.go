@@ -92,11 +92,21 @@ func parseStringLiteral(s *string, idx int) (string, error) {
 func parseLatexStringLiteral(s *string, idx int) (string, error) {
 	start := idx
 
+	opens := 0
+
 	for idx < len(*s) {
 		r := (*s)[idx]
 
-		if r == '\\' && (*s)[idx:idx+8] == `\<close>` {
-			return (*s)[start : idx+8], nil
+		if r == '\\' {
+			if (*s)[idx:idx+8] == `\<close>` {
+				opens--
+
+				if opens == 0 {
+					return (*s)[start : idx+8], nil
+				}
+			} else if (*s)[idx:idx+7] == `\<open>` {
+				opens++
+			}
 		}
 
 		idx++
@@ -210,7 +220,12 @@ func (l *Lexer) Split() ([]*tk.Token, error) {
 				return tokens, err
 			}
 
-			tokens = append(tokens, &tk.Token{tk.StringLiteral, str, lineNo})
+			// if the string starts with `\<comment>` then this is a comment instead of a string literal
+			if strings.HasPrefix(str, `\<comment>`) {
+				tokens = append(tokens, &tk.Token{tk.Comment, str, lineNo})
+			} else {
+				tokens = append(tokens, &tk.Token{tk.StringLiteral, str, lineNo})
+			}
 			currentIndex += len(str)
 
 			lineNo += strings.Count(str, "\n")

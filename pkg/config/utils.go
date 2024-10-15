@@ -8,10 +8,6 @@ import (
 	"time"
 )
 
-func FileExistsIn(directory string) (bool, error) {
-	return internal.PathExists(path.Join(directory, internal.ConfigFileName))
-}
-
 func FromFile(directory string) (*ProofmanConfig, error) {
 	cfgFilePath := path.Join(directory, internal.ConfigFileName)
 
@@ -41,11 +37,6 @@ func Default() *ProofmanConfig {
 			Description: "New Isabelle project using Proofman",
 			Version:     time.Now().Format(time.DateOnly),
 			Requires:    []string{},
-		},
-		Package: Package{
-			Exclude: []string{
-				".venv/**", "**/*.ipkg",
-			},
 		},
 	}
 }

@@ -13,16 +13,14 @@ func main() {
 		Name:  "proofman",
 		Usage: "Dependency manager and utility tool for Isabelle",
 		Commands: []*cli.Command{
+			commands.IndexAfpCommand,
 			commands.InitCommand,
-			commands.PackageCommand,
-			commands.UploadCommand,
 			commands.VersionCommand,
 			// install <package> <version> [use lockfile?]
 			// uninstall <package>
 			// lock?
 			// tree
 			// go mod tidy equivalent?
-			// upload
 		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
@@ -37,18 +35,6 @@ func main() {
 				Usage:    "Show more logging output",
 				Category: "Logging",
 			},
-			&cli.StringFlag{
-				Name:     "index-url",
-				Aliases:  []string{"i"},
-				Usage:    "Override the `URL` for the package index",
-				Category: "Packaging",
-			},
-			&cli.StringFlag{
-				Name:     "token",
-				Aliases:  []string{"t"},
-				Usage:    "Your API `TOKEN` for the package index",
-				Category: "Packaging",
-			},
 		},
 		Before: func(cCtx *cli.Context) error {
 			if cCtx.Bool("quiet") {
@@ -56,12 +42,6 @@ func main() {
 			}
 			if cCtx.Bool("verbose") {
 				internal.LogLevel = internal.LogLvlVerbose
-			}
-			if url := cCtx.String("index-url"); url != "" {
-				internal.ProofbankBaseUrl = url
-			}
-			if token := cCtx.String("token"); token != "" {
-				internal.ProofbankApiToken = token
 			}
 
 			return nil
