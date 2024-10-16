@@ -89,6 +89,20 @@ func parseStringLiteral(s *string, idx int) (string, error) {
 	return "", errors.New("unterminated string literal")
 }
 
+func parseBracedStringLiteral(s *string, idx int) (string, error) {
+	start := idx + 2
+
+	for idx < len(*s) {
+		if (*s)[idx:idx+2] == "*}" {
+			return (*s)[start:idx], nil
+		}
+
+		idx++
+	}
+
+	return "", errors.New("unterminated braced string literal")
+}
+
 func parseLatexStringLiteral(s *string, idx int) (string, error) {
 	start := idx
 
@@ -210,8 +224,18 @@ func (l *Lexer) Split() ([]*tk.Token, error) {
 				return tokens, err
 			}
 
-			tokens = append(tokens, &tk.Token{tk.StringLiteral, str, lineNo})
+			tokens = append(tokens, &tk.Token{tk.StringLiteral, strings.TrimSpace(str), lineNo})
 			currentIndex += len(str) + 2
+
+			lineNo += strings.Count(str, "\n")
+		case currentRune == '{' && currentIndex+1 < len(l.source) && l.source[currentIndex+1] == '*':
+			str, err := parseBracedStringLiteral(&l.source, currentIndex)
+			if err != nil {
+				return tokens, err
+			}
+
+			tokens = append(tokens, &tk.Token{tk.StringLiteral, strings.TrimSpace(str), lineNo})
+			currentIndex += len(str) + 4
 
 			lineNo += strings.Count(str, "\n")
 		case currentRune == '\\':
@@ -220,6 +244,7 @@ func (l *Lexer) Split() ([]*tk.Token, error) {
 				return tokens, err
 			}
 
+			// TODO - consider adding a token info flag mentioning this is latex syntax
 			// if the string starts with `\<comment>` then this is a comment instead of a string literal
 			if strings.HasPrefix(str, `\<comment>`) {
 				tokens = append(tokens, &tk.Token{tk.Comment, str, lineNo})
@@ -243,7 +268,7 @@ func (l *Lexer) Split() ([]*tk.Token, error) {
 				return tokens, err
 			}
 
-			tokens = append(tokens, &tk.Token{tk.Comment, str, lineNo})
+			tokens = append(tokens, &tk.Token{tk.Comment, strings.TrimSpace(str), lineNo})
 			currentIndex += len(str) + 4
 
 			lineNo += strings.Count(str, "\n")

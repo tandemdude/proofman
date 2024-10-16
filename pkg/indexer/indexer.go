@@ -40,22 +40,27 @@ type AFPIndexer struct {
 	indexRepositoryUrl string
 }
 
-func New(afpDirectoryPath, indexRepositoryUrl string) (*AFPIndexer, error) {
-	// check the directory exists, and try to read the AFP version from /etc/version
-	// if we can't resolve the version or the directory then fail (we won't be able to index it)
-	content, err := os.ReadFile(filepath.Join(afpDirectoryPath, "etc", "version"))
-	if err != nil {
-		return nil, errors.Join(err, ErrCannotReadVersion)
-	}
+func New(afpDirectoryPath, indexRepositoryUrl, versionOverride string) (*AFPIndexer, error) {
+	version := versionOverride
 
-	match := versionRegex.FindSubmatch(content)
-	if match == nil {
-		return nil, ErrCannotParseVersion
+	if version == "" {
+		// check the directory exists, and try to read the AFP version from /etc/version
+		// if we can't resolve the version or the directory then fail (we won't be able to index it)
+		content, err := os.ReadFile(filepath.Join(afpDirectoryPath, "etc", "version"))
+		if err != nil {
+			return nil, errors.Join(err, ErrCannotReadVersion)
+		}
+
+		match := versionRegex.FindSubmatch(content)
+		if match == nil {
+			return nil, ErrCannotParseVersion
+		}
+		version = string(match[1])
 	}
-	logging.Unquiet("AFP directory matches version: %s", string(match[1]))
+	logging.Unquiet("AFP directory matches version: %s", version)
 
 	return &AFPIndexer{
-		afpVersion:         string(match[1]),
+		afpVersion:         version,
 		afpDirectoryPath:   afpDirectoryPath,
 		indexRepositoryUrl: indexRepositoryUrl,
 	}, nil

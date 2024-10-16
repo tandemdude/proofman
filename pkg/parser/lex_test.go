@@ -67,6 +67,17 @@ func TestParseStringLiteral(t *testing.T) {
 	}
 }
 
+func TestParseBracedStringLiteral(t *testing.T) {
+	assert := asrt.New(t)
+
+	actual := "{* foo bar *}"
+	expected := " foo bar "
+
+	str, err := parseBracedStringLiteral(&actual, 0)
+	assert.NoError(err, "Unexpected error for input: %s", actual)
+	assert.Equal(expected, str, "Expected: %s, got: %s", expected, str)
+}
+
 var (
 	rawLatexTestString = `\<open>
 foo bar baz
