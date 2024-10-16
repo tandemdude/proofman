@@ -17,10 +17,17 @@ const (
 	isabelleRootUrl  = "https://isabelle.in.tum.de/repos/isabelle/raw-file/%s/%s/ROOT"
 )
 
-func FetchBuiltinSessions() ([]string, error) {
-	version, err := Version()
-	if err != nil {
-		return nil, err
+func FetchBuiltinSessions(versionOverride string) ([]string, error) {
+	var version string
+	var err error
+
+	if versionOverride != "" {
+		version = versionOverride
+	} else {
+		version, err = Version()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	logging.Verbose("checking local cache for list of builtin sessions")

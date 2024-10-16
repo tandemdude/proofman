@@ -144,7 +144,7 @@ func (a *AFPIndexer) Index() error {
 		return errors.Join(err, ErrCannotReadROOTS)
 	}
 
-	builtinSessions, err := isabelle.FetchBuiltinSessions()
+	builtinSessions, err := isabelle.FetchBuiltinSessions("Isabelle" + a.afpVersion[:4])
 	if err != nil {
 		return errors.Join(err, ErrCannotResolveBuiltinSessions)
 	}
