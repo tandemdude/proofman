@@ -44,12 +44,12 @@ func SetupRemote(remoteUrl, directory string) error {
 		return err
 	}
 
-	_, err = runGitCommandInDirectory(directory, "fetch")
+	_, err = runGitCommandInDirectory(directory, "fetch", "origin", "main")
 	if err != nil {
 		return err
 	}
 
-	_, err = runGitCommandInDirectory(directory, "reset", "--hard", "FETCH_HEAD")
+	_, err = runGitCommandInDirectory(directory, "reset", "--hard", "origin/main")
 	if err != nil {
 		return err
 	}
